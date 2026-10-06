@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students Information</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='32' fill='%231b3557'/><polygon points='32,15 55,26 32,37 9,26' fill='white'/><path d='M19 32v9c0 4 26 4 26 0v-9l-13 6z' fill='white'/></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <script src="jquery-4.0.0.js"></script>
+    <script>
+        // Fallback if the local file is missing
+        window.jQuery || document.write('<script src="https://code.jquery.com/jquery-4.0.0.min.js"><\/script>');
+    </script>
+    <style>
+        :root { --navy: #1b3557; }
+        body { background:pink; color: var(--navy); }
+        .card-main { max-width: 990px; min-height: 600px; }
+        .text-navy { color: var(--navy); }
+
+        /* Buttons with an icon part */
+        .btn-navy { background: var(--navy); color: #fff; }
+        .btn-navy:hover { background: #142840; color: #fff; }
+        .btn-icon { padding: 0; overflow: hidden; display: inline-flex; align-items: stretch; }
+        .btn-icon .icon { display: flex; align-items: center; justify-content: center; width: 32px; background: rgba(0,0,0,.2); }
+        .btn-icon .label { display: flex; align-items: center; padding: 0 14px; height: 32px; }
+        .btn-icon:disabled { opacity: .6; }
+        .table thead th { background:pink; color: var(--navy); text-align: center; vertical-align: middle; }
+        .table td { text-align: center; vertical-align: middle; }
+        .table td.name { text-align: left; padding-left: 16px; }
+        .table tbody tr.selected > td { background:powderblue; }
+        .table tbody tr:last-child td { border-bottom: 1px solid #cfabb9; }
+
+        .modal-content { border-radius: 18px; overflow: hidden; }
+        .modal-header { background:pink; color: #fff; }
+        #formError { color: #d33; font-size: .875rem; margin-right: auto; }
+        /* Red star after the label of a required field */
+        .form-label.required::after { content: " *"; color: #d33; font-weight: bold; }
+        .invalid-feedback { font-size: .8rem; }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="card card-main mx-auto shadow-sm border-0 rounded-1">
+            <div class="card-body px-4 px-md-5 pt-4">
+
+                <!-- LOGO: to use your own image, replace the whole <svg> below with:
+                     <img src="logo.png" alt="Logo" height="64"> -->
+                <div class="text-center mb-2" id="logo">
+                    <svg width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Students logo" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="32" cy="32" r="31" fill="#1b3557" stroke="pink" stroke-width="2"/>
+                        <polygon points="32,15 55,26 32,37 9,26" fill="#fff"/>
+                        <path d="M19 32v9c0 4 26 4 26 0v-9l-13 6z" fill="#fff"/>
+                        <line x1="52" y1="27" x2="52" y2="40" stroke="pink" stroke-width="2"/>
+                        <circle cx="52" cy="42" r="2.5" fill="pink"/>
+                    </svg>
+                </div>
+
+                <h1 class="text-center fw-bold text-navy mb-3">Students Information</h1>
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <input type="search" class="form-control form-control-sm" id="txtSearch"
+                      placeholder="Search ID, name, phone, or email" aria-label="Search students" style="max-width:260px">
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-navy btn-icon" id="btnAddStudent">
+                            <span class="icon"><i class="bi bi-plus-lg"></i></span>
+                            <span class="label">Add New</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-success btn-icon" id="btnEdit">
+                            <span class="icon"><i class="bi bi-pencil-fill"></i></span>
+                            <span class="label">Edit</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-danger btn-icon" id="btnRemoveStudent">
+                            <span class="icon"><i class="bi bi-x-lg"></i></span>
+                            <span class="label">Remove</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width:50px"><input type="checkbox" class="form-check-input" id="chkAll" aria-label="Select all"></th>
+                                <th style="width:90px">ID</th>
+                                <th>Full Name</th>
+                                <th>Khmer Name</th>
+                                <th>Sex</th>
+                                <th>Phone Number</th>
+                                <th>DOB</th>
+                                <th>Email</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTable"></tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Dark background behind the popup (shown and hidden by jQuery) -->
+    <div class="modal-backdrop show" id="backdrop" style="display:none"></div>
+
+    <!-- Add / Edit popup (shown and hidden by jQuery) -->
+    <div class="modal" id="studentModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="modalTitle">Add New</h5>
+                    <button type="button" class="btn-close btn-close-white closeModal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="txtId" class="form-label required">ID</label>
+                            <input type="text" inputmode="numeric" class="form-control" id="txtId" maxlength="10">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="txtName" class="form-label required">Full name</label>
+                            <input type="text" class="form-control" id="txtName" maxlength="100">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="txtKhName" class="form-label required">Khmer name</label>
+                            <input type="text" class="form-control" id="txtKhName" maxlength="100" lang="km"
+                                   placeholder="ឈ្មោះជាអក្សរខ្មែរ" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="selSex" class="form-label">Sex</label>
+                            <select class="form-select" id="selSex">
+                                <option value="">N/A</option>
+                                <option value="M">Male</option>
+                                <option value="F">Female</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="txtDob" class="form-label required">Date of Birth</label>
+                            <input type="date" class="form-control" id="txtDob">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="txtEmail" class="form-label required">Email</label>
+                            <input type="email" class="form-control" id="txtEmail" maxlength="100">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="txtPhone" class="form-label required">Phone Number</label>
+                            <input type="text" class="form-control" id="txtPhone" maxlength="15">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <span id="formError"></span>
+                    <button type="button" class="btn btn-sm btn-success btn-icon" id="btnSave">
+                        <span class="icon"><i class="bi bi-check-lg"></i></span>
+                        <span class="label" id="saveLabel">Create</span>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger btn-icon closeModal">
+                        <span class="icon"><i class="bi bi-x-lg"></i></span>
+                        <span class="label">Close</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(function () {
+
+            var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+            // Khmer letters, Khmer digits, zero-width marks used when typing Khmer, and space
+            var KHMER_ONLY = /^[\u1780-\u17FF\u200B\u200C\u200D ]+$/;
+            var NOT_KHMER = /[^\u1780-\u17FF\u200B\u200C\u200D ]/g;
+            var STORAGE_KEY = "students_v2";   // new key, so old saved data (numeric IDs) is not used
+
+            // IDs are TEXT (in quotes) so the leading zero stays: "08181"
+            var defaults = [
+                { id: "08181", name: "Kan Marady", khName: "កាន់ ម៉ារ៉ាឌី", sex: "F", phone: "093 857 688", dob: "2000-01-01", email: "test@gmail.com" },
+                { id: "08182", name: "Siv Meymey", khName: "ស៊ីវ ម៉ីមី", sex: "F", phone: "093 857 688", dob: "2000-01-30", email: "test2@gmail.com" },
+                { id: "08183", name: "Sivguy Te",  khName: "ស៊ីវគុយ តេ", sex: "M", phone: "093 857 688", dob: "2001-01-01", email: "test1@gmail.com" }
+            ];
+
+            var students = null;
+            try { students = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) {}
+            if (!Array.isArray(students)) { students = defaults; }
+
+            var editingId = null; // null = adding new
+
+            // Next ID to suggest: biggest ID + 1, keeping the same length (08183 -> 08184)
+            function suggestId() {
+                var max = 0, len = 1;
+                $.each(students, function (i, s) {
+                    max = Math.max(max, Number(s.id));
+                    len = Math.max(len, String(s.id).length);
+                });
+                return String(max + 1).padStart(len, "0");
+            }
+
+            function saveData() {
+                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(students)); } catch (e) {}
+            }
+
+            function formatDob(value) {
+                if (!value) { return ""; }
+                var p = value.split("-");
+                return p[2] + "-" + months[Number(p[1]) - 1] + "-" + p[0];
+            }
+
+            // Students that match the search box
+            function visibleStudents() {
+                var q = $("#txtSearch").val().trim().toLowerCase();
+                if (q === "") { return students; }
+                return $.grep(students, function (s) {
+                    return (s.id + " " + s.name + " " + (s.khName || "") + " " + s.phone + " " + s.email).toLowerCase().indexOf(q) !== -1;
+                });
+            }
+
+            function render() {
+                var list = visibleStudents();
+                var tbody = $("#userTable").empty();
+                if (list.length === 0) {
+                    tbody.append('<tr><td colspan="8" class="text-muted py-4">No students found.</td></tr>');
+                }
+                $.each(list, function (i, s) {
+                    var tr = $("<tr></tr>");
+                    tr.append($("<td></td>").append(
+                        $('<input type="checkbox" class="form-check-input rowCheck" aria-label="Select student">').attr("data-id", s.id)
+                    ));
+                    tr.append($("<td></td>").text(s.id));
+                    tr.append($('<td class="name"></td>').text(s.name));
+                    tr.append($('<td class="name" lang="km"></td>').text(s.khName || ""));
+                    tr.append($("<td></td>").text(s.sex));
+                    tr.append($("<td></td>").text(s.phone));
+                    tr.append($("<td></td>").text(formatDob(s.dob)));
+                    tr.append($("<td></td>").text(s.email));
+                    tbody.append(tr);
+                });
+                $("#chkAll").prop("checked", false);
+            }
+
+            // IDs of the checked rows, like ["08181", "08183"]
+            function checkedIds() {
+                return $("#userTable .rowCheck:checked").map(function () {
+                    return String($(this).attr("data-id"));   // attr keeps it as text
+                }).get();
+            }
+
+            function syncCheckAll() {
+                var total = $("#userTable .rowCheck").length;
+                var checked = $("#userTable .rowCheck:checked").length;
+                $("#chkAll").prop("checked", total > 0 && total === checked);
+            }
+
+            // Show a red border and a red message under one field
+            function showError(selector, message) {
+                $(selector).addClass("is-invalid").siblings(".invalid-feedback").text(message);
+            }
+
+            function clearErrors() {
+                $("#studentModal .is-invalid").removeClass("is-invalid");
+                $("#studentModal .invalid-feedback").text("");
+                $("#formError").text("");
+            }
+
+            function clearForm() {
+                $("#txtId, #txtName, #txtKhName, #txtDob, #txtPhone, #txtEmail").val("");
+                $("#selSex").val("");
+                clearErrors();
+            }
+
+            // Show the popup with jQuery
+            function openModal(title, saveText) {
+                $("#modalTitle").text(title);
+                $("#saveLabel").text(saveText);
+                $("#formError").text("");
+                $("#btnSave").prop("disabled", false);
+                $("#backdrop").fadeIn(150);
+                $("#studentModal").addClass("show").fadeIn(150, function () {
+                    $("#txtName").focus();
+                });
+            }
+
+            // Hide the popup with jQuery
+            function closeModal() {
+                $("#backdrop").fadeOut(150);
+                $("#studentModal").fadeOut(150, function () {
+                    $(this).removeClass("show");
+                    clearForm();
+                    editingId = null;
+                    $("#btnSave").prop("disabled", false);
+                });
+            }
+
+            // Add New
+            $("#btnAddStudent").click(function () {
+                editingId = null;
+                clearForm();
+                $("#txtId").val(suggestId());   // suggested ID, the user can change it
+                openModal("Add New", "Create");
+            });
+
+            // Edit (exactly one checked row)
+            $("#btnEdit").click(function () {
+                var ids = checkedIds();
+                if (ids.length !== 1) {
+                    alert("Please select exactly one student to edit.");
+                    return;
+                }
+                var s = $.grep(students, function (x) { return x.id === ids[0]; })[0];
+                editingId = s.id;
+                $("#txtId").val(s.id);
+                $("#txtName").val(s.name);
+                $("#txtKhName").val(s.khName || "");
+                $("#selSex").val(s.sex);
+                $("#txtDob").val(s.dob);
+                $("#txtPhone").val(s.phone);
+                $("#txtEmail").val(s.email);
+                openModal("Edit", "Save");
+            });
+
+            // Create / Save
+            $("#btnSave").click(function () {
+                var $btn = $(this);
+                if ($btn.prop("disabled")) { return; }   // stop double click
+
+                var id = $("#txtId").val().trim();
+                var name = $("#txtName").val().trim();   // jQuery 4 has no $.trim, so use .trim()
+                var khName = $("#txtKhName").val().replace(/\s+/g, " ").trim();   // one space between words
+                var email = $("#txtEmail").val().trim();
+                var phone = $("#txtPhone").val().trim();
+                var dob = $("#txtDob").val();
+                var today = new Date().toISOString().slice(0, 10);
+
+                clearErrors();
+                var ok = true;
+
+                // ID (required, digits only, must be new). Leading zero is allowed.
+                if (id === "") {
+                    showError("#txtId", "ID is required.");
+                    ok = false;
+                } else if (!/^[0-9]{1,10}$/.test(id)) {
+                    showError("#txtId", "ID must be numbers only, like 08184.");
+                    ok = false;
+                } else {
+                    var sameId = $.grep(students, function (s) {
+                        return s.id === id && s.id !== editingId;
+                    });
+                    if (sameId.length > 0) {
+                        showError("#txtId", "This ID already exists.");
+                        ok = false;
+                    }
+                }
+
+                // Full name (required)
+                if (name === "") {
+                    showError("#txtName", "Full name is required.");
+                    ok = false;
+                }
+
+                // Khmer name (required, Khmer letters and spaces only)
+                if (khName === "") {
+                    showError("#txtKhName", "Khmer name is required.");
+                    ok = false;
+                } else if (!KHMER_ONLY.test(khName)) {
+                    showError("#txtKhName", "Please type Khmer letters only.");
+                    ok = false;
+                }
+
+                // Date of birth (required)
+                if (dob === "") {
+                    showError("#txtDob", "Date of birth is required.");
+                    ok = false;
+                } else if (dob > today || dob < "1900-01-01") {
+                    showError("#txtDob", "Date of birth is not valid.");
+                    ok = false;
+                }
+
+                // Email (required)
+                if (email === "") {
+                    showError("#txtEmail", "Email is required.");
+                    ok = false;
+                } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    showError("#txtEmail", "Please enter a valid email.");
+                    ok = false;
+                } else {
+                    var dup = $.grep(students, function (s) {
+                        return s.id !== editingId && s.email.toLowerCase() === email.toLowerCase();
+                    });
+                    if (dup.length > 0) {
+                        showError("#txtEmail", "This email already exists.");
+                        ok = false;
+                    }
+                }
+
+                // Phone (required)
+                if (phone === "") {
+                    showError("#txtPhone", "Phone number is required.");
+                    ok = false;
+                } else if (!/^[0-9 +\-]{8,15}$/.test(phone)) {
+                    showError("#txtPhone", "Phone number is not valid.");
+                    ok = false;
+                }
+
+                if (!ok) {
+                    $("#formError").text("Please fix the red fields.");
+                    $("#studentModal .is-invalid").first().focus();
+                    return;
+                }
+
+                var data = {
+                    id: id,
+                    name: name,
+                    khName: khName,
+                    sex: $("#selSex").val(),
+                    dob: dob,
+                    phone: phone,
+                    email: email
+                };
+
+                // Edit mode: alert if nothing was changed
+                if (editingId !== null) {
+                    var old = $.grep(students, function (s) { return s.id === editingId; })[0];
+                    var same = old.id === data.id && old.name === data.name && (old.khName || "") === data.khName && old.sex === data.sex &&
+                               old.dob === data.dob && old.phone === data.phone && old.email === data.email;
+                    if (same) {
+                        alert("No changes were made. Please edit something first.");
+                        return;
+                    }
+                }
+
+                $btn.prop("disabled", true);
+
+                if (editingId === null) {
+                    students.push(data);
+                } else {
+                    $.each(students, function (i, s) {
+                        if (s.id === editingId) {
+                            $.extend(s, data);
+                            return false;   // stop the loop
+                        }
+                    });
+                }
+
+                saveData();
+                closeModal();
+                render();
+            });
+
+            // Khmer name box: block English keyboard (space is allowed)
+            $("#txtKhName").on("keypress", function (e) {
+                var ch = e.key;
+                if (ch && ch.length === 1 && !KHMER_ONLY.test(ch)) {
+                    e.preventDefault();
+                    showError("#txtKhName", "Please switch to the Khmer keyboard.");
+                }
+            });
+
+            // Also clean text that was pasted or typed another way
+            $("#txtKhName").on("input", function () {
+                var before = $(this).val();
+                var after = before.replace(NOT_KHMER, "");
+                if (before !== after) {
+                    $(this).val(after);
+                    showError("#txtKhName", "Please switch to the Khmer keyboard.");
+                } else {
+                    $(this).removeClass("is-invalid").siblings(".invalid-feedback").text("");
+                }
+            });
+
+            // Remove the red error of a field when the user types in it
+            $("#studentModal input, #studentModal select").not("#txtKhName").on("input change", function () {
+                $(this).removeClass("is-invalid").siblings(".invalid-feedback").text("");
+            });
+
+            // Enter key saves the form
+            $("#studentModal input").keydown(function (e) {
+                if (e.key === "Enter") { $("#btnSave").click(); }
+            });
+
+            // Close the popup: X button, Close button, Esc key
+            // (clicking the dark area does NOT close it, so typed data is not lost)
+            $(".closeModal").click(closeModal);
+            $(document).keydown(function (e) {
+                if (e.key === "Escape" && $("#studentModal").is(":visible")) { closeModal(); }
+            });
+
+            // Remove checked rows
+            $("#btnRemoveStudent").click(function () {
+                var ids = checkedIds();
+                if (ids.length === 0) {
+                    alert("Please select at least one student to remove.");
+                    return;
+                }
+                if (!confirm("Remove " + ids.length + " selected student(s)?")) {
+                    return;
+                }
+                students = $.grep(students, function (s) {
+                    return $.inArray(s.id, ids) === -1;
+                });
+                saveData();
+                render();
+            });
+
+            // Select all
+            $("#chkAll").change(function () {
+                if ($("#userTable .rowCheck").length === 0) {
+                    $(this).prop("checked", false);
+                    return;
+                }
+                var checked = $(this).prop("checked");
+                $("#userTable .rowCheck").prop("checked", checked);
+                $("#userTable tr").toggleClass("selected", checked);
+            });
+
+            // Row checkbox
+            $("#userTable").on("change", ".rowCheck", function () {
+                $(this).closest("tr").toggleClass("selected", $(this).prop("checked"));
+                syncCheckAll();
+            });
+
+            // Search
+            $("#txtSearch").on("input", render);
+
+            render();
+        });
+    </script>
+</body>
+</html>
