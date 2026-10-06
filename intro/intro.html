@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JQuery Introduction</title>
+    <script src="jquery-4.0.0.min.js"></script>
+    <style>
+        div {
+            border: 1px solid black;
+            padding: 10px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <table border="1">
+
+    </table>
+    <ul class="me">
+        <li>i am the first person</li>
+        <li>i am the last person</li>
+    </ul>
+
+    <div class="nav-box">
+        <p class="iten0">Item0</p>
+        <p class="iten1">Item1</p>
+        <p class="iten2">Item2</p>
+        <p class="iten3">Item3</p>
+        <p class="iten4">Item4</p>
+        <p class="iten5">Item5</p>
+        <p class="iten6">Item6</p>
+    </div>
+    <p>test</p>
+
+    <p class="test"></p>
+
+    <h1 id="title">Hello</h1>
+    <h2 id="ac">ACLEDA University of Business</h2>
+    <p id="description">Welcome to our university!</p>
+    <br>
+
+    <div>
+        <h1>Title</h1>
+        <p>Paragraph 1</p>
+        <p>Paragraph 2</p>
+    </div>
+
+    <button id="btn">Change Siblings</button>
+    <p id="item">loookkk</p>
+    <ul>
+        <li>item1</li>
+        <li>item2</li>
+    </ul>
+
+    <div id="parent">
+        <div id="child1">
+            <div id="child2">
+                <div id="grandchild1">Grandchild 1</div>
+                <p>Hello</p>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <button class="btnadd">Add</button>
+        <button class="btnhide">Hide</button>
+        <button class="btnshow">Show</button>
+        <button class="btnde">Delete</button>
+        <button class="btnbefore">before</button>
+        <p class="text">Hello everyone</p>
+    </div>
+
+    <div id="parent2">
+        <p>Paragraph 1</p>
+        <span>Span 1</span>
+        <div>
+            <p>Paragraph 2</p>
+        </div>
+    </div>
+
+    <div class="same">
+        <p>Hello</p>
+        <p>Byebye</p>
+        <p>file3</p>
+        <p>file4</p>
+        <p>file5</p>
+    </div>
+
+
+</body>
+</html>
+
+<script>
+    $(document).ready(function () {
+        //parent
+        $("#ac").css("color", "blue");
+        $("#grandchild1").parentsUntil("#parent").css("background-color", "green");
+        $("#child2").find("p").css("color", "red");
+
+        $(".btnhide").on("click", function () {
+            $(".text").hide();
+        });
+
+        $(".btnshow").on("click", function () {
+            $(".text").show();
+        });
+
+        $(".btnadd").on("click", function () {
+            $(".text").append(" Tunh nas jg bn ss muy tt").css("color", "blue");
+
+        });
+        $(".btnde").click(function(){
+            $(".text").empty();
+           
+        })
+         $(".btnbefore").click(function(){
+            $(".text").wrap
+           
+        })
+
+        $("#btn").on("click", function () {
+            $("h1").siblings().css("color", "red");
+         
+        });
+
+        $(".iten0").nextUntil(".tester").css("color", "red");
+        $(".same p").first().css("color", "red");
+        $(".same p").last().css("color", "yellow");
+        $(".same p").eq(2).css("color", "purple");
+
+        $(".me li").first().css("color", "pink");
+    });
+</script>
